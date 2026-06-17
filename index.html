@@ -2,87 +2,73 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Consulta de Analíticos</title>
+    <title>Consulta Analíticos</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <style>
-        body { background: #050508; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { width: 100%; max-width: 400px; text-align: center; background: #111; padding: 30px; border-radius: 10px; border: 1px solid #333; }
-        input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 5px; border: 1px solid #444; background: #1a1a1a; color: white; text-align: center; }
-        button { padding: 12px 25px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
-        .btn-consultar { background: #D4AF37; color: black; }
-        .btn-descarga { background: #2563eb; color: white; display: none; }
-    </style>
 </head>
 <body>
 
-<div class="container">
-    <img src="visanal.png" alt="Visado" style="width: 150px; margin-bottom: 20px;">
-    <h3>Consulta de Analítico</h3>
-    <input type="text" id="nombreInput" placeholder="Nombre completo">
-    <button class="btn-consultar" onclick="consultar()">Consulta analítico</button>
-    <p id="res"></p>
-    <button id="btn" class="btn-descarga" onclick="descargar()">Descarga PDF</button>
-</div>
+    <input type="text" id="nombreInput" placeholder="Nombre exacto">
+    <button onclick="consultarDatos()">Consultar</button>
+    <p id="resultado"></p>
+    <button id="btnDescarga" style="display:none;" onclick="abrirLink()">Descarga PDF</button>
 
-<script>
-    // Configuración proporcionada
-    const firebaseConfig = {
-        apiKey: "AIzaSyD47_2UtWLFI_VRVvvXVAqn4zZzZ4d1ggo",
-        authDomain: "av-clinica-convergencia.firebaseapp.com",
-        projectId: "av-clinica-convergencia",
-        storageBucket: "av-clinica-convergencia.firebasestorage.app",
-        messagingSenderId: "939404425675",
-        appId: "1:939404425675:web:8cfae157099efabd741e4e"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    <script>
+        // Configuración Firebase
+        firebase.initializeApp({
+            apiKey: "AIzaSyD47_2UtWLFI_VRVvvXVAqn4zZzZ4d1ggo",
+            authDomain: "av-clinica-convergencia.firebaseapp.com",
+            projectId: "av-clinica-convergencia",
+            storageBucket: "av-clinica-convergencia.firebasestorage.app",
+            messagingSenderId: "939404425675",
+            appId: "1:939404425675:web:8cfae157099efabd741e4e"
+        });
 
-    const links = {
-        "RIOS Graciela": "https://drive.google.com/drive/folders/1da5V0BKy4FghsOCz7B66mNOz7ZTFMKt5?usp=drive_link",
-        "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link",
-        "STEFANINI BENZO Romina": "https://drive.google.com/drive/folders/1PioVY2n5eJp7W1-c-yLqVzHkiXfNbEzh?usp=drive_link",
-        "RODRIGUEZ Ramiro": "https://drive.google.com/drive/folders/1kixAS7AqD1zr3pDYKC4mjBBW0sqNimx0?usp=drive_link",
-        "CAON Federico": "https://drive.google.com/drive/folders/1LnnPq0w7P81ShMJsG3MNoLkfhktakV6v?usp=drive_link",
-        "PRAVAZ Emilia": "https://drive.google.com/drive/folders/1S9em-SWYKJcDn_ntTBznWgviHVjP5x5n?usp=sharing"
-    };
+        const db = firebase.firestore();
 
-    async function consultar() {
-        const nombre = document.getElementById('nombreInput').value.trim();
-        const res = document.getElementById('res');
-        const btn = document.getElementById('btn');
+        const links = {
+            "RIOS Graciela": "https://drive.google.com/drive/folders/1da5V0BKy4FghsOCz7B66mNOz7ZTFMKt5?usp=drive_link",
+            "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link",
+            "STEFANINI BENZO Romina": "https://drive.google.com/drive/folders/1PioVY2n5eJp7W1-c-yLqVzHkiXfNbEzh?usp=drive_link",
+            "RODRIGUEZ Ramiro": "https://drive.google.com/drive/folders/1kixAS7AqD1zr3pDYKC4mjBBW0sqNimx0?usp=drive_link",
+            "CAON Federico": "https://drive.google.com/drive/folders/1LnnPq0w7P81ShMJsG3MNoLkfhktakV6v?usp=drive_link",
+            "PRAVAZ Emilia": "https://drive.google.com/drive/folders/1S9em-SWYKJcDn_ntTBznWgviHVjP5x5n?usp=sharing"
+        };
 
-        if (!links[nombre]) {
-            res.innerText = "Nombre no registrado en el sistema.";
-            res.style.color = "#ff9900";
+        async function consultarDatos() {
+            const nombre = document.getElementById("nombreInput").value.trim();
+            const res = document.getElementById("resultado");
+            const btn = document.getElementById("btnDescarga");
+
+            // Reseteo visual
+            res.innerText = "Consultando...";
             btn.style.display = "none";
-            return;
-        }
-        
-        try {
-            const snap = await db.collection("visado_analítico").where("estudiante", "==", nombre).get();
-            
-            if (!snap.empty) {
-                res.innerText = "Ud posee analítico listo para descarga";
-                res.style.color = "#22c55e";
-                btn.style.display = "block";
-                btn.dataset.url = links[nombre];
-            } else {
-                res.innerText = "No se registran datos, comuníquese con Dirección";
-                res.style.color = "#ef4444";
-                btn.style.display = "none";
-            }
-        } catch (e) {
-            res.innerText = "Error de conexión con la base de datos.";
-            res.style.color = "#ef4444";
-        }
-    }
 
-    function descargar() {
-        const url = document.getElementById('btn').dataset.url;
-        if (url) window.open(url, '_blank');
-    }
-</script>
+            try {
+                // Consulta plana a la colección
+                const snap = await db.collection("visado_analítico")
+                                     .where("estudiante", "==", nombre)
+                                     .get();
+
+                if (!snap.empty) {
+                    if (links[nombre]) {
+                        res.innerText = "Ud posee analítico listo para descarga";
+                        btn.style.display = "block";
+                        btn.dataset.link = links[nombre];
+                    } else {
+                        res.innerText = "Nombre encontrado en BD, pero sin link configurado.";
+                    }
+                } else {
+                    res.innerText = "No se encontraron datos.";
+                }
+            } catch (error) {
+                res.innerText = "Error crítico: " + error.message;
+            }
+        }
+
+        function abrirLink() {
+            window.open(document.getElementById("btnDescarga").dataset.link, "_blank");
+        }
+    </script>
 </body>
 </html>
