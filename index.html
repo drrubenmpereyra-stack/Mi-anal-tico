@@ -5,6 +5,7 @@
     <title>Consulta de Analíticos</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
     <style>
         body { background: #050508; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { width: 100%; max-width: 400px; text-align: center; background: #111; padding: 30px; border-radius: 10px; border: 1px solid #333; }
@@ -18,39 +19,37 @@
 
 <div class="container">
     <img src="visanal.png" alt="Visado" style="width: 150px; margin-bottom: 20px;">
-    
     <h3>Consulta de Analítico</h3>
-    <p style="font-size: 0.9em; color: #aaa;">Formato: Rios Graciela</p>
-    
     <input type="text" id="nombreInput" placeholder="Ej: Rios Graciela">
-    <br>
     <button class="btn-consultar" onclick="consultarAnalitico()">Consulta analítico</button>
-    
-    <div id="mensajeArea" style="margin-top: 20px;">
-        <p id="resultado"></p>
-        <button id="btnDescarga" class="btn-descarga" onclick="abrirDrive()">Descarga PDF</button>
-    </div>
-
-    <br><br>
-    <button onclick="window.close()" style="background: #333; color: white;">Salir</button>
+    <p id="resultado"></p>
+    <button id="btnDescarga" class="btn-descarga" onclick="abrirDrive()">Descarga PDF</button>
 </div>
 
 <script>
-    // Asegúrese de configurar su objeto 'db' con su configuración de Firebase
-    // const db = firebase.firestore();
+    // --- CONFIGURACIÓN DE CONEXIÓN ---
+    const firebaseConfig = {
+        apiKey: "SU_API_KEY",
+        authDomain: "av-clinica-convergencia.firebaseapp.com",
+        projectId: "av-clinica-convergencia",
+        storageBucket: "av-clinica-convergencia.appspot.com",
+        messagingSenderId: "SU_ID",
+        appId: "SU_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
+    // --- LÓGICA DE CONSULTA ---
     const linksAnaliticos = {
         "RIOS Graciela": "https://drive.google.com/drive/folders/1da5V0BKy4FghsOCz7B66mNOz7ZTFMKt5?usp=drive_link",
         "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link"
-        // Agregue el resto aquí
     };
 
     async function consultarAnalitico() {
         const nombre = document.getElementById('nombreInput').value.trim();
         const resLabel = document.getElementById('resultado');
         const btnDescarga = document.getElementById('btnDescarga');
-
-        if (!nombre) return alert("Ingrese un nombre");
 
         resLabel.innerText = "Consultando...";
         
@@ -71,17 +70,14 @@
                 btnDescarga.style.display = "none";
             }
         } catch (e) {
-            resLabel.innerText = "Error de conexión con la base de datos.";
+            resLabel.innerText = "Error de conexión: " + e.message;
         }
     }
 
     function abrirDrive() {
         const url = document.getElementById('btnDescarga').dataset.url;
-        if (url) {
-            window.open(url, '_blank');
-        } else {
-            alert("El enlace para este alumno no está configurado.");
-        }
+        if (url) window.open(url, '_blank');
+        else alert("Enlace no configurado.");
     }
 </script>
 </body>
