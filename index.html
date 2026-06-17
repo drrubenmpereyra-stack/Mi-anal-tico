@@ -27,7 +27,7 @@
 </div>
 
 <script>
-    // --- CONFIGURACIÓN DE CONEXIÓN ---
+    // Configuración Firebase (Reemplace con sus datos)
     const firebaseConfig = {
         apiKey: "SU_API_KEY",
         authDomain: "av-clinica-convergencia.firebaseapp.com",
@@ -40,10 +40,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- LÓGICA DE CONSULTA ---
+    // Diccionario de enlaces fijo en el código
     const linksAnaliticos = {
         "RIOS Graciela": "https://drive.google.com/drive/folders/1da5V0BKy4FghsOCz7B66mNOz7ZTFMKt5?usp=drive_link",
-        "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link"
+        "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link",
+        "STEFANINI BENZO Romina": "https://drive.google.com/drive/folders/1PioVY2n5eJp7W1-c-yLqVzHkiXfNbEzh?usp=drive_link",
+        "RODRIGUEZ Ramiro": "https://drive.google.com/drive/folders/1kixAS7AqD1zr3pDYKC4mjBBW0sqNimx0?usp=drive_link",
+        "CAON Federico": "https://drive.google.com/drive/folders/1LnnPq0w7P81ShMJsG3MNoLkfhktakV6v?usp=drive_link",
+        "PRAVAZ Emilia": "https://drive.google.com/drive/folders/1S9em-SWYKJcDn_ntTBznWgviHVjP5x5n?usp=sharing"
     };
 
     async function consultarAnalitico() {
@@ -54,30 +58,33 @@
         resLabel.innerText = "Consultando...";
         
         try {
+            // Verificar si el nombre tiene un link configurado
+            const tieneLink = linksAnaliticos.hasOwnProperty(nombre);
+            
+            // Consultar si existe registro de visado en la base de datos
             const snapshot = await db.collection("visado_analítico")
                                      .where("estudiante", "==", nombre)
                                      .where("verificado", "==", true)
                                      .get();
 
-            if (!snapshot.empty) {
+            if (!snapshot.empty && tieneLink) {
                 resLabel.innerText = "Ud posee analítico listo para descarga";
                 resLabel.style.color = "#22c55e";
                 btnDescarga.style.display = "inline-block";
-                btnDescarga.dataset.url = linksAnaliticos[nombre] || "";
+                btnDescarga.dataset.url = linksAnaliticos[nombre];
             } else {
                 resLabel.innerText = "No se registran datos, comuníquese con Dirección";
                 resLabel.style.color = "#ef4444";
                 btnDescarga.style.display = "none";
             }
         } catch (e) {
-            resLabel.innerText = "Error de conexión: " + e.message;
+            resLabel.innerText = "Error de conexión con la base de datos.";
         }
     }
 
     function abrirDrive() {
         const url = document.getElementById('btnDescarga').dataset.url;
         if (url) window.open(url, '_blank');
-        else alert("Enlace no configurado.");
     }
 </script>
 </body>
