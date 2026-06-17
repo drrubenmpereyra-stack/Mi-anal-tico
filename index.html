@@ -27,7 +27,7 @@
 </div>
 
 <script>
-    // Configuración Firebase (Reemplace con sus datos)
+    // --- CONFIGURACIÓN DE CONEXIÓN ---
     const firebaseConfig = {
         apiKey: "SU_API_KEY",
         authDomain: "av-clinica-convergencia.firebaseapp.com",
@@ -40,7 +40,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Diccionario de enlaces fijo en el código
+    // --- ENLACES FIJOS ---
     const linksAnaliticos = {
         "RIOS Graciela": "https://drive.google.com/drive/folders/1da5V0BKy4FghsOCz7B66mNOz7ZTFMKt5?usp=drive_link",
         "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link",
@@ -56,29 +56,31 @@
         const btnDescarga = document.getElementById('btnDescarga');
 
         resLabel.innerText = "Consultando...";
-        
+        btnDescarga.style.display = "none";
+
         try {
-            // Verificar si el nombre tiene un link configurado
-            const tieneLink = linksAnaliticos.hasOwnProperty(nombre);
-            
-            // Consultar si existe registro de visado en la base de datos
+            // Buscamos el nombre en la base de datos
             const snapshot = await db.collection("visado_analítico")
                                      .where("estudiante", "==", nombre)
-                                     .where("verificado", "==", true)
                                      .get();
 
-            if (!snapshot.empty && tieneLink) {
-                resLabel.innerText = "Ud posee analítico listo para descarga";
-                resLabel.style.color = "#22c55e";
-                btnDescarga.style.display = "inline-block";
-                btnDescarga.dataset.url = linksAnaliticos[nombre];
+            if (!snapshot.empty) {
+                // Si el alumno existe en la base, verificamos si tenemos su link
+                if (linksAnaliticos[nombre]) {
+                    resLabel.innerText = "Ud posee analítico listo para descarga";
+                    resLabel.style.color = "#22c55e";
+                    btnDescarga.style.display = "inline-block";
+                    btnDescarga.dataset.url = linksAnaliticos[nombre];
+                } else {
+                    resLabel.innerText = "Usuario encontrado, pero el enlace no está configurado.";
+                    resLabel.style.color = "#ff9900";
+                }
             } else {
                 resLabel.innerText = "No se registran datos, comuníquese con Dirección";
                 resLabel.style.color = "#ef4444";
-                btnDescarga.style.display = "none";
             }
         } catch (e) {
-            resLabel.innerText = "Error de conexión con la base de datos.";
+            resLabel.innerText = "Error de conexión: " + e.message;
         }
     }
 
