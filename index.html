@@ -5,7 +5,6 @@
     <title>Consulta de Analíticos</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    
     <style>
         body { background: #050508; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { width: 100%; max-width: 400px; text-align: center; background: #111; padding: 30px; border-radius: 10px; border: 1px solid #333; }
@@ -20,28 +19,27 @@
 <div class="container">
     <img src="visanal.png" alt="Visado" style="width: 150px; margin-bottom: 20px;">
     <h3>Consulta de Analítico</h3>
-    <input type="text" id="nombreInput" placeholder="Ej: Rios Graciela">
-    <button class="btn-consultar" onclick="consultarAnalitico()">Consulta analítico</button>
-    <p id="resultado"></p>
-    <button id="btnDescarga" class="btn-descarga" onclick="abrirDrive()">Descarga PDF</button>
+    <input type="text" id="nombreInput" placeholder="Nombre completo">
+    <button class="btn-consultar" onclick="consultar()">Consulta analítico</button>
+    <p id="res"></p>
+    <button id="btn" class="btn-descarga" onclick="descargar()">Descarga PDF</button>
 </div>
 
 <script>
-    // --- CONFIGURACIÓN DE CONEXIÓN ---
+    // Configuración proporcionada
     const firebaseConfig = {
-        apiKey: "SU_API_KEY",
+        apiKey: "AIzaSyD47_2UtWLFI_VRVvvXVAqn4zZzZ4d1ggo",
         authDomain: "av-clinica-convergencia.firebaseapp.com",
         projectId: "av-clinica-convergencia",
-        storageBucket: "av-clinica-convergencia.appspot.com",
-        messagingSenderId: "SU_ID",
-        appId: "SU_APP_ID"
+        storageBucket: "av-clinica-convergencia.firebasestorage.app",
+        messagingSenderId: "939404425675",
+        appId: "1:939404425675:web:8cfae157099efabd741e4e"
     };
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- ENLACES FIJOS ---
-    const linksAnaliticos = {
+    const links = {
         "RIOS Graciela": "https://drive.google.com/drive/folders/1da5V0BKy4FghsOCz7B66mNOz7ZTFMKt5?usp=drive_link",
         "SCHWAB Gisela": "https://drive.google.com/drive/folders/1xDl_o19beXQrXMo4AdLBF4TWmEHkqwYb?usp=drive_link",
         "STEFANINI BENZO Romina": "https://drive.google.com/drive/folders/1PioVY2n5eJp7W1-c-yLqVzHkiXfNbEzh?usp=drive_link",
@@ -50,42 +48,39 @@
         "PRAVAZ Emilia": "https://drive.google.com/drive/folders/1S9em-SWYKJcDn_ntTBznWgviHVjP5x5n?usp=sharing"
     };
 
-    async function consultarAnalitico() {
+    async function consultar() {
         const nombre = document.getElementById('nombreInput').value.trim();
-        const resLabel = document.getElementById('resultado');
-        const btnDescarga = document.getElementById('btnDescarga');
+        const res = document.getElementById('res');
+        const btn = document.getElementById('btn');
 
-        resLabel.innerText = "Consultando...";
-        btnDescarga.style.display = "none";
-
+        if (!links[nombre]) {
+            res.innerText = "Nombre no registrado en el sistema.";
+            res.style.color = "#ff9900";
+            btn.style.display = "none";
+            return;
+        }
+        
         try {
-            // Buscamos el nombre en la base de datos
-            const snapshot = await db.collection("visado_analítico")
-                                     .where("estudiante", "==", nombre)
-                                     .get();
-
-            if (!snapshot.empty) {
-                // Si el alumno existe en la base, verificamos si tenemos su link
-                if (linksAnaliticos[nombre]) {
-                    resLabel.innerText = "Ud posee analítico listo para descarga";
-                    resLabel.style.color = "#22c55e";
-                    btnDescarga.style.display = "inline-block";
-                    btnDescarga.dataset.url = linksAnaliticos[nombre];
-                } else {
-                    resLabel.innerText = "Usuario encontrado, pero el enlace no está configurado.";
-                    resLabel.style.color = "#ff9900";
-                }
+            const snap = await db.collection("visado_analítico").where("estudiante", "==", nombre).get();
+            
+            if (!snap.empty) {
+                res.innerText = "Ud posee analítico listo para descarga";
+                res.style.color = "#22c55e";
+                btn.style.display = "block";
+                btn.dataset.url = links[nombre];
             } else {
-                resLabel.innerText = "No se registran datos, comuníquese con Dirección";
-                resLabel.style.color = "#ef4444";
+                res.innerText = "No se registran datos, comuníquese con Dirección";
+                res.style.color = "#ef4444";
+                btn.style.display = "none";
             }
         } catch (e) {
-            resLabel.innerText = "Error de conexión: " + e.message;
+            res.innerText = "Error de conexión con la base de datos.";
+            res.style.color = "#ef4444";
         }
     }
 
-    function abrirDrive() {
-        const url = document.getElementById('btnDescarga').dataset.url;
+    function descargar() {
+        const url = document.getElementById('btn').dataset.url;
         if (url) window.open(url, '_blank');
     }
 </script>
